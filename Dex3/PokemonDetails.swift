@@ -9,13 +9,15 @@ import SwiftUI
 import CoreData
 
 struct PokemonDetails: View {
+    @Environment(\.managedObjectContext) private var viewContext
+    
     @EnvironmentObject var pokemon: Pokemon
     @State var showShiny = false
     
     var body: some View {
         ScrollView {
             ZStack {
-                Image("normalgrasselectricpoisonfairy")
+                Image(pokemon.background)
                     .resizable()
                     .scaledToFit()
                     .shadow(color: .black, radius: 6)
@@ -43,8 +45,36 @@ struct PokemonDetails: View {
                 }
                 
                 Spacer()
+                
+                Button {
+                    withAnimation {
+                        pokemon.favorite.toggle()
+                        
+                        do {
+                            try viewContext.save()
+                        } catch {
+                            let nsError = error as NSError
+                            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                        }
+                    }
+                } label: {
+                    if pokemon.favorite {
+                        Image(systemName: "star.fill")
+                    } else {
+                        Image(systemName: "star")
+                    }
+                }
+                .font(.largeTitle)
+                .foregroundStyle(.yellow)
             }
             .padding()
+            
+            Text("Stats")
+                .font(.title)
+                .padding(.bottom, -7)
+            
+            Stats()
+                .environmentObject(pokemon)
         }
         .navigationTitle(pokemon.name!.capitalized)
         .toolbar {
@@ -54,7 +84,7 @@ struct PokemonDetails: View {
                 } label: {
                     if showShiny {
                         Image(systemName: "wand.and.stars")
-                            .foregroundColor(.yellow)
+                            .foregroundStyle(.yellow)
                     } else {
                         Image(systemName: "wand.and.stars.inverse")
                     }
